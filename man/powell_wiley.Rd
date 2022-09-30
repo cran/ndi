@@ -4,16 +4,28 @@
 \alias{powell_wiley}
 \title{Neighborhood Deprivation Index based on Andrews et al. (2020) and Slotman et al. (2022)}
 \usage{
-powell_wiley(geo = "tract", year, imp = FALSE, quiet = FALSE, ...)
+powell_wiley(
+  geo = "tract",
+  year = 2020,
+  imp = FALSE,
+  quiet = FALSE,
+  round_output = FALSE,
+  df = NULL,
+  ...
+)
 }
 \arguments{
 \item{geo}{Character string specifying the geography of the data either census tracts \code{geo = "tract"} (the default) or counties \code{geo = "county"}.}
 
-\item{year}{Numeric. The year to compute the estimate (2010-2020 currently available).}
+\item{year}{Numeric. The year to compute the estimate. The default is 2020, and the years 2010 onward are currently available.}
 
 \item{imp}{Logical. If TRUE, will impute missing census characteristics within the internal \code{\link[psych]{principal}} using median values of variables. If FALSE (the default), will not impute.}
 
 \item{quiet}{Logical. If TRUE, will display messages about potential missing census information, standardized Cronbach's alpha, and proportion of variance explained by principal component analysis. The default is FALSE.}
+
+\item{round_output}{Logical. If TRUE, will round the output of raw census and NDI values from the \code{\link[tidycensus]{get_acs}} at one and four significant digits, respectively. The default is FALSE.}
+
+\item{df}{Optional. Pass a pre-formatted \code{'dataframe'} or \code{'tibble'} with the desired variables through the function. Bypasses the data obtained by \code{\link[tidycensus]{get_acs}}. The default is NULL. See Details below.}
 
 \item{...}{Arguments passed to \code{\link[tidycensus]{get_acs}} to select state, county, and other arguments for census characteristics}
 }
@@ -24,7 +36,7 @@ An object of class 'list'. This is a named list with the following components:
 \item{\code{ndi}}{An object of class 'tbl' for the GEOID, name, NDI continuous, NDI quintiles, and raw census values of specified census geographies.}
 \item{\code{pca}}{An object of class 'principal', returns the output of \code{\link[psych]{principal}} used to compute the NDI values.}
 \item{\code{missing}}{An object of class 'tbl' of the count and proportion of missingness for each census variable used to compute the NDI.}
-\item{\code{cronbach}}{An object of class 'character' or 'numeric' for the results of the Cronbach's alpha calculation. If only one factor is computed, a message is returned. If more than one factor is computed, the Cronbach's alpha is calculated and should check that it is >0.7 for respectable internal consistency between factors.}
+\item{\code{cronbach}}{An object of class 'character' or 'numeric' for the results of the Cronbach's alpha calculation. If only one factor is computed, a message is returned. If more than one factor is computed, Cronbach's alpha is calculated and should check that it is >0.7 for respectable internal consistency between factors.}
 }
 }
 \description{
@@ -33,7 +45,7 @@ Compute the Neighborhood Deprivation Index (Powell-Wiley) values.
 \details{
 This function will compute the Neighborhood Deprivation Index (NDI) of U.S. census tracts or counties for a specified geographical referent (e.g., US-standardized) based on Andrews et al. (2020) \doi{10.1080/17445647.2020.1750066} and Slotman et al. (2022) \doi{10.1016/j.dib.2022.108002}.
 
-The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey characteristics used for computation involving a factor analysis with the \code{\link[psych]{principal}} function. The yearly estimates are available 2010 and after when all census characteristics became available. The thirteen characteristics chosen by Roux and Mair (2010) \doi{10.1111/j.1749-6632.2009.05333.x} are:
+The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey characteristics used for computation involving a factor analysis with the \code{\link[psych]{principal}} function. The yearly estimates are available in 2010 and after when all census characteristics became available. The thirteen characteristics chosen by Roux and Mair (2010) \doi{10.1111/j.1749-6632.2009.05333.x} are:
 \itemize{
 \item{MedHHInc (5B19013): }{median household income (dollars)}
 \item{PctRecvIDR (B19054): }{percent of households receiving dividends, interest, or rental income}
@@ -55,8 +67,13 @@ Use the internal \code{state} and \code{county} arguments within the \code{\link
 The categorical NDI (Powell-Wiley) values are population-weighted quintiles of the continuous NDI (Powell-Wiley) values.
 
 Check if the proportion of variance explained by the first principal component is high (more than 0.5).
+
+Users can bypass \code{\link[tidycensus]{get_acs}} by specifying a pre-formatted data frame or tibble using the \code{df} argument. This function will compute an index using the first component of a principal component analysis (PCA) with a Promax (oblique) rotation and a minimum Eigenvalue of 1, omitting variables with absolute loading score < 0.4. The recommended structure of the data frame or tibble is an ID (e.g., GEOID) in the first feature (column), an estimate of the total population in the second feature (column), followed by the variables of interest (in any order) and no additional information (e.g., omit state or county names from the \code{df} argument input).
 }
 \examples{
+
+powell_wiley(df = DCtracts2020[ , -c(3:10)])
+
 \dontrun{
 # Wrapped in \dontrun{} because these examples require a Census API key.
   
