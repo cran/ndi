@@ -1,6 +1,6 @@
 #' Neighborhood Deprivation Index based on Andrews et al. (2020) and Slotman et al. (2022)
 #' 
-#' Compute the Neighborhood Deprivation Index (Powell-Wiley) values.
+#' Compute the aspatial Neighborhood Deprivation Index (Powell-Wiley).
 #'
 #' @param geo Character string specifying the geography of the data either census tracts \code{geo = "tract"} (the default) or counties \code{geo = "county"}.
 #' @param year Numeric. The year to compute the estimate. The default is 2020, and the years 2010 onward are currently available.
@@ -10,7 +10,7 @@
 #' @param df Optional. Pass a pre-formatted \code{'dataframe'} or \code{'tibble'} with the desired variables through the function. Bypasses the data obtained by \code{\link[tidycensus]{get_acs}}. The default is NULL. See Details below.
 #' @param ... Arguments passed to \code{\link[tidycensus]{get_acs}} to select state, county, and other arguments for census characteristics
 #'
-#' @details This function will compute the Neighborhood Deprivation Index (NDI) of U.S. census tracts or counties for a specified geographical referent (e.g., US-standardized) based on Andrews et al. (2020) \doi{10.1080/17445647.2020.1750066} and Slotman et al. (2022) \doi{10.1016/j.dib.2022.108002}.
+#' @details This function will compute the aspatial Neighborhood Deprivation Index (NDI) of U.S. census tracts or counties for a specified geographical referent (e.g., US-standardized) based on Andrews et al. (2020) \doi{10.1080/17445647.2020.1750066} and Slotman et al. (2022) \doi{10.1016/j.dib.2022.108002}.
 #' 
 #' The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey characteristics used for computation involving a factor analysis with the \code{\link[psych]{principal}} function. The yearly estimates are available in 2010 and after when all census characteristics became available. The thirteen characteristics chosen by Roux and Mair (2010) \doi{10.1111/j.1749-6632.2009.05333.x} are:
 #' \itemize{
@@ -42,7 +42,7 @@
 #' \describe{
 #' \item{\code{ndi}}{An object of class 'tbl' for the GEOID, name, NDI continuous, NDI quintiles, and raw census values of specified census geographies.}
 #' \item{\code{pca}}{An object of class 'principal', returns the output of \code{\link[psych]{principal}} used to compute the NDI values.}
-#' \item{\code{missing}}{An object of class 'tbl' of the count and proportion of missingness for each census variable used to compute the NDI.}
+#' \item{\code{missing}}{An object of class 'tbl' of the count and proportion of missingness for each census variable used to compute NDI.}
 #' \item{\code{cronbach}}{An object of class 'character' or 'numeric' for the results of the Cronbach's alpha calculation. If only one factor is computed, a message is returned. If more than one factor is computed, Cronbach's alpha is calculated and should check that it is >0.7 for respectable internal consistency between factors.}
 #' }
 #' 
@@ -111,20 +111,20 @@ powell_wiley <- function(geo = "tract", year = 2020, imp = FALSE, quiet = FALSE,
     if (year < 2015){ vars <- c(vars[-13], PctNoPhone = "DP04_0074P") }
     
     # Acquire NDI variables
-    ndi_vars <- suppressMessages(suppressWarnings(tidycensus::get_acs(geography = geo,
+    ndi_data <- suppressMessages(suppressWarnings(tidycensus::get_acs(geography = geo,
                                                                       year = year,
                                                                       output = "wide",
                                                                       variables = vars, ...)))
     
     if (geo == "tract") {
-      ndi_vars <- ndi_vars %>%
+      ndi_data <- ndi_data %>%
         tidyr::separate(NAME, into = c("tract", "county", "state"), sep = ",") %>%
         dplyr::mutate(tract = gsub("[^0-9\\.]","", tract))
     } else {
-      ndi_vars <- ndi_vars %>% tidyr::separate(NAME, into = c("county", "state"), sep = ",") 
+      ndi_data <- ndi_data %>% tidyr::separate(NAME, into = c("county", "state"), sep = ",") 
     }
     
-    ndi_vars <- ndi_vars %>%
+    ndi_data <- ndi_data %>%
       dplyr::mutate(MedHHInc = MedHHIncE,
                     PctRecvIDR = PctRecvIDR_numE / PctRecvIDR_denE * 100,
                     PctPubAsst = PctPubAsst_numE / PctPubAsst_denE * 100,
@@ -164,20 +164,20 @@ powell_wiley <- function(geo = "tract", year = 2020, imp = FALSE, quiet = FALSE,
                     PctUnemplZ = scale(PctUnempl))
     
     # generate NDI
-    ndi_vars_pca <- ndi_vars %>%
+    ndi_data_pca <- ndi_data %>%
       dplyr::select(logMedHHInc, PctNoIDRZ, PctPubAsstZ, logMedHomeVal, PctWorkClassZ,
                     PctFemHeadKidsZ, PctNotOwnerOccZ, PctNoPhoneZ, PctNComPlmbZ, PctEducLTHSZ,
                     PctEducLTBchZ, PctFamBelowPovZ, PctUnemplZ)
   } else {
     # If inputing pre-formatted data: 
     colnames(df)[1:2] <- c("GEOID", "TotalPop") # rename first and second features (columns) with name to match above 
-    ndi_vars <- dplyr::as_tibble(df)
-    ndi_vars_pca <- ndi_vars[ , -c(1:2)] # omits the first two features (columns) typically an ID (e.g., GEOID or FIPS) and TotalPop
+    ndi_data <- dplyr::as_tibble(df)
+    ndi_data_pca <- ndi_data[ , -c(1:2)] # omits the first two features (columns) typically an ID (e.g., GEOID or FIPS) and TotalPop
   }
   # Run a factor analysis using Promax (oblique) rotation and a minimum Eigenvalue of 1
-  nfa <- eigen(stats::cor(ndi_vars_pca, use = "complete.obs"))
+  nfa <- eigen(stats::cor(ndi_data_pca, use = "complete.obs"))
   nfa <- sum(nfa$values > 1) # count of factors with a minimum Eigenvalue of 1
-  fit <- psych::principal(ndi_vars_pca, 
+  fit <- psych::principal(ndi_data_pca, 
                           nfactors = nfa,
                           rotate = "none")
   fit_rotate <- stats::promax(stats::loadings(fit), m = 3)
@@ -200,7 +200,7 @@ powell_wiley <- function(geo = "tract", year = 2020, imp = FALSE, quiet = FALSE,
   }
   
   ## Variable correlation matrix (R_mat)
-  R_mat <- as.matrix(cor(ndi_vars_pca[complete.cases(ndi_vars_pca), ]))
+  R_mat <- as.matrix(cor(ndi_data_pca[complete.cases(ndi_data_pca), ]))
   
   ## standardized score coefficients or weight matrix (B_mat)
   B_mat <- solve(R_mat, S_mat)
@@ -236,31 +236,31 @@ powell_wiley <- function(geo = "tract", year = 2020, imp = FALSE, quiet = FALSE,
   fit_rotate$Vaccounted <- varex
   
   if (imp == TRUE) {
-    ndi_vars_scrs <- as.matrix(ndi_vars_pca)
-    miss <- which(is.na(ndi_vars_scrs), arr.ind = TRUE)
-    item.med <- apply(ndi_vars_scrs, 2, stats::median, na.rm = TRUE)
-    ndi_vars_scrs[miss] <- item.med[miss[, 2]]
+    ndi_data_scrs <- as.matrix(ndi_data_pca)
+    miss <- which(is.na(ndi_data_scrs), arr.ind = TRUE)
+    item.med <- apply(ndi_data_scrs, 2, stats::median, na.rm = TRUE)
+    ndi_data_scrs[miss] <- item.med[miss[, 2]]
   } else {
-    ndi_vars_scrs <- ndi_vars_pca
+    ndi_data_scrs <- ndi_data_pca
   }
   
-  scrs <- as.matrix(scale(ndi_vars_scrs[complete.cases(ndi_vars_scrs), abs(S_mat[ , 1]) > 0.4 ])) %*% B_mat[abs(S_mat[ , 1]) > 0.4, 1]
+  scrs <- as.matrix(scale(ndi_data_scrs[complete.cases(ndi_data_scrs), abs(S_mat[ , 1]) > 0.4 ])) %*% B_mat[abs(S_mat[ , 1]) > 0.4, 1]
   
-  ndi_vars_NA <- ndi_vars[complete.cases(ndi_vars_scrs), ]
-  ndi_vars_NA$NDI <- c(scrs)
+  ndi_data_NA <- ndi_data[complete.cases(ndi_data_scrs), ]
+  ndi_data_NA$NDI <- c(scrs)
   
-  ndi_vars_NDI <- dplyr::left_join(ndi_vars[ , c("GEOID", "TotalPop")], ndi_vars_NA[ , c("GEOID", "NDI")], by = "GEOID", all.x = TRUE)
+  ndi_data_NDI <- dplyr::left_join(ndi_data[ , c("GEOID", "TotalPop")], ndi_data_NA[ , c("GEOID", "NDI")], by = "GEOID")
   
   # Calculate Cronbach's alpha correlation coefficient among the factors and verify values are above 0.7. 
   if (nfa == 1) { 
     crnbch <- "Only one factor with minimum Eigenvalue of 1. Cannot calculate Cronbach's alpha."
   } else {
-    cronbach <- suppressMessages(psych::alpha(ndi_vars_pca[ , abs(S_mat[ , 1]) > 0.4 ], check.keys = TRUE, na.rm = TRUE, warnings = FALSE))
+    cronbach <- suppressMessages(psych::alpha(ndi_data_pca[ , abs(S_mat[ , 1]) > 0.4 ], check.keys = TRUE, na.rm = TRUE, warnings = FALSE))
     crnbch <- cronbach$total$std.alpha
   }
   
   # Warning for missingness of census characteristics
-  missingYN <- ndi_vars_pca %>%
+  missingYN <- ndi_data_pca %>%
     tidyr::pivot_longer(cols = dplyr::everything(),
                         names_to = "variable",
                         values_to = "val") %>%
@@ -274,8 +274,6 @@ powell_wiley <- function(geo = "tract", year = 2020, imp = FALSE, quiet = FALSE,
     # Warning for missing census data
     if (sum(missingYN$n_missing) > 0) {
       message("Warning: Missing census data")
-    } else {
-      returnValue(missingYN)
     }
     
     # Warning for Cronbach's alpha < 0.7
@@ -290,7 +288,7 @@ powell_wiley <- function(geo = "tract", year = 2020, imp = FALSE, quiet = FALSE,
   }
   
   # NDI quintiles weighted by tract population
-  NDIQuint <- ndi_vars_NDI %>%
+  NDIQuint <- ndi_data_NDI %>%
     dplyr::mutate(NDIQuint = cut(NDI*log(TotalPop),
                                  breaks = stats::quantile(NDI*log(TotalPop),
                                                           probs = c(0, 0.2, 0.4, 0.6, 0.8, 1),
@@ -308,7 +306,7 @@ powell_wiley <- function(geo = "tract", year = 2020, imp = FALSE, quiet = FALSE,
   if (is.null(df)) {
     # Format output
     if (round_output == TRUE) {
-      ndi <- cbind(ndi_vars, NDIQuint) %>%
+      ndi <- cbind(ndi_data, NDIQuint) %>%
         dplyr::mutate(PctRecvIDR = round(PctRecvIDR, digits = 1),
                       PctPubAsst = round(PctPubAsst, digits = 1),
                       PctMgmtBusScArti = round(PctMgmtBusScArti, digits = 1),
@@ -321,7 +319,7 @@ powell_wiley <- function(geo = "tract", year = 2020, imp = FALSE, quiet = FALSE,
                       PctFamBelowPov = round(PctFamBelowPov, digits = 1),
                       PctUnempl = round(PctUnempl, digits = 1))
     } else {
-      ndi <- cbind(ndi_vars, NDIQuint)
+      ndi <- cbind(ndi_data, NDIQuint)
     }
     
     if (geo == "tract") {

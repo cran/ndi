@@ -1,17 +1,16 @@
-#' Dissimilarity Index based on Duncan & Duncan (1955) 
+#' Correlation Ratio based on Bell (1954) and White (1986) 
 #' 
-#' Compute the aspatial Dissimilarity Index (Duncan & Duncan) of selected racial/ethnic subgroup(s) and U.S. geographies
+#' Compute the aspatial Correlation Ratio (White) of a selected racial/ethnic subgroup(s) and U.S. geographies.
 #'
 #' @param geo_large Character string specifying the larger geographical unit of the data. The default is counties \code{geo_large = "county"}.
 #' @param geo_small Character string specifying the smaller geographical unit of the data. The default is census tracts \code{geo_large = "tract"}.
 #' @param year Numeric. The year to compute the estimate. The default is 2020, and the years 2009 onward are currently available.
-#' @param subgroup Character string specifying the racial/ethnic subgroup(s) as the comparison population. See Details for available choices.
-#' @param subgroup_ref Character string specifying the racial/ethnic subgroup(s) as the reference population. See Details for available choices.
+#' @param subgroup Character string specifying the racial/ethnic subgroup(s). See Details for available choices.
 #' @param omit_NAs Logical. If FALSE, will compute index for a larger geographical unit only if all of its smaller geographical units have values. The default is TRUE.
 #' @param quiet Logical. If TRUE, will display messages about potential missing census information. The default is FALSE.
 #' @param ... Arguments passed to \code{\link[tidycensus]{get_acs}} to select state, county, and other arguments for census characteristics
 #'
-#' @details This function will compute the aspatial Dissimilarity Index (DI) of selected racial/ethnic subgroups and U.S. geographies for a specified geographical extent (e.g., the entire U.S. or a single state) based on Duncan & Duncan (1955) \doi{10.2307/2088328}. This function provides the computation of DI for any of the U.S. Census Bureau race/ethnicity subgroups (including Hispanic and non-Hispanic individuals).
+#' @details This function will compute the aspatial Correlation Ratio (V or \eqn{Eta^{2}}{Eta^2}) of selected racial/ethnic subgroups and U.S. geographies for a specified geographical extent (e.g., the entire U.S. or a single state) based on Bell (1954) \doi{10.2307/2574118} and White (1986) \doi{10.2307/3644339}. This function provides the computation of V for any of the U.S. Census Bureau race/ethnicity subgroups (including Hispanic and non-Hispanic individuals).
 #' 
 #' The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey characteristics used for the aspatial computation. The yearly estimates are available for 2009 onward when ACS-5 data are available but are available from other U.S. Census Bureau surveys. The twenty racial/ethnic subgroups (U.S. Census Bureau definitions) are:
 #' \itemize{
@@ -39,16 +38,16 @@
 #' 
 #' Use the internal \code{state} and \code{county} arguments within the \code{\link[tidycensus]{get_acs}} function to specify geographic extent of the data output.
 #' 
-#' DI is a measure of the evenness of racial/ethnic residential segregation when comparing smaller geographical areas to larger ones within which the smaller geographical areas are located. DI can range in value from 0 to 1 and represents the proportion of racial/ethnic subgroup members that would have to change their area of residence to achieve an even distribution within the larger geographical area under conditions of maximum segregation.
+#' V removes the asymmetry from the Isolation Index (Bell) by controlling for the effect of population composition. The Isolation Index (Bell) is some measure of the probability that a member of one subgroup(s) will meet or interact with a member of another subgroup(s) with higher values signifying higher probability of interaction (less isolation). V can range in value from 0 to 1.
 #' 
-#' Larger geographies available include state \code{geo_large = "state"}, county \code{geo_large = "county"}, and census tract \code{geo_large = "tract"} levels. Smaller geographies available include, county \code{geo_small = "county"}, census tract \code{geo_small = "tract"}, and census block group \code{geo_small = "block group"} levels. If a larger geographical area is comprised of only one smaller geographical area (e.g., a U.S county contains only one census tract), then the DI value returned is NA.
+#' Larger geographies available include state \code{geo_large = "state"}, county \code{geo_large = "county"}, and census tract \code{geo_large = "tract"} levels. Smaller geographies available include, county \code{geo_small = "county"}, census tract \code{geo_small = "tract"}, and census block group \code{geo_small = "block group"} levels. If a larger geographical area is comprised of only one smaller geographical area (e.g., a U.S county contains only one census tract), then the V value returned is NA.
 #' 
 #' @return An object of class 'list'. This is a named list with the following components:
 #' 
 #' \describe{
-#' \item{\code{di}}{An object of class 'tbl' for the GEOID, name, and DI at specified larger census geographies.}
-#' \item{\code{di_data}}{An object of class 'tbl' for the raw census values at specified smaller census geographies.}
-#' \item{\code{missing}}{An object of class 'tbl' of the count and proportion of missingness for each census variable used to compute DI}
+#' \item{\code{v}}{An object of class 'tbl' for the GEOID, name, and V at specified larger census geographies.}
+#' \item{\code{v_data}}{An object of class 'tbl' for the raw census values at specified smaller census geographies.}
+#' \item{\code{missing}}{An object of class 'tbl' of the count and proportion of missingness for each census variable used to compute V.}
 #' }
 #' 
 #' @import dplyr
@@ -65,16 +64,16 @@
 #' \dontrun{
 #' # Wrapped in \dontrun{} because these examples require a Census API key.
 #'   
-#'   # Dissimilarity Index of non-Hispanic Black vs. non-Hispanic white populations
+#'   # Isolation of non-Hispanic Black populations
 #'   ## of census tracts within Georgia, U.S.A., counties (2020)
-#'   duncan(geo_large = "county", geo_small = "tract", state = "GA",
-#'          year = 2020, subgroup = "NHoLB", subgroup_ref = "NHoLW")
+#'   white(geo_large = "county", geo_small = "tract", state = "GA",
+#'         year = 2020, subgroup = "NHoLB")
 #'   
 #' }
 #' 
-duncan <- function(geo_large = "county", geo_small = "tract", year = 2020, subgroup, subgroup_ref, omit_NAs = TRUE, quiet = FALSE, ...) {
+white <- function(geo_large = "county", geo_small = "tract", year = 2020, subgroup, omit_NAs = TRUE, quiet = FALSE, ...) {
   
- # Check arguments
+  # Check arguments
   match.arg(geo_large, choices = c("state", "county", "tract"))
   match.arg(geo_small, choices = c("county", "tract", "block group"))
   stopifnot(is.numeric(year), year >= 2009) # all variables available 2009 onward
@@ -83,14 +82,10 @@ duncan <- function(geo_large = "county", geo_small = "tract", year = 2020, subgr
                         "NHoLSOR", "NHoLTOMR", "NHoLTRiSOR", "NHoLTReSOR",
                         "HoL", "HoLW", "HoLB", "HoLAIAN", "HoLA", "HoLNHOPI",
                         "HoLSOR", "HoLTOMR", "HoLTRiSOR", "HoLTReSOR"))
-  match.arg(subgroup_ref, several.ok = TRUE,
-            choices = c("NHoL", "NHoLW", "NHoLB", "NHoLAIAN", "NHoLA", "NHoLNHOPI",
-                        "NHoLSOR", "NHoLTOMR", "NHoLTRiSOR", "NHoLTReSOR",
-                        "HoL", "HoLW", "HoLB", "HoLAIAN", "HoLA", "HoLNHOPI",
-                        "HoLSOR", "HoLTOMR", "HoLTRiSOR", "HoLTReSOR"))
   
   # Select census variables
-  vars <- c(NHoL = "B03002_002",
+  vars <- c(TotalPop = "B03002_001",
+            NHoL = "B03002_002",
             NHoLW = "B03002_003",
             NHoLB = "B03002_004",
             NHoLAIAN = "B03002_005",
@@ -111,94 +106,82 @@ duncan <- function(geo_large = "county", geo_small = "tract", year = 2020, subgr
             HoLTRiSOR = "B03002_020",
             HoLTReSOR = "B03002_021")
   
-  selected_vars <- vars[c(subgroup, subgroup_ref)]
+  selected_vars <- vars[c("TotalPop", subgroup)]
   out_names <- names(selected_vars) # save for output
   in_subgroup <- paste(subgroup, "E", sep = "")
-  in_subgroup_ref <- paste(subgroup_ref, "E", sep = "")
   
-  # Acquire DI variables and sf geometries
-  di_data <- suppressMessages(suppressWarnings(tidycensus::get_acs(geography = geo_small,
-                                                                   year = year,
-                                                                   output = "wide",
-                                                                   variables = selected_vars,
-                                                                   geometry = TRUE,
-                                                                   keep_geo_vars = TRUE, ...)))
+  # Acquire V variables and sf geometries
+  v_data <- suppressMessages(suppressWarnings(tidycensus::get_acs(geography = geo_small,
+                                                                  year = year, 
+                                                                  output = "wide",
+                                                                  variables = selected_vars, 
+                                                                  geometry = TRUE,
+                                                                  keep_geo_vars = TRUE, ...)))
   
   # Format output
   if (geo_small == "county") {
-    di_data <- sf::st_drop_geometry(di_data) %>%
+    v_data <- sf::st_drop_geometry(v_data) %>%
       tidyr::separate(NAME.y, into = c("county", "state"), sep = ",")
   }
   if (geo_small == "tract") {
-    di_data <- sf::st_drop_geometry(di_data) %>%
+    v_data <- sf::st_drop_geometry(v_data) %>%
       tidyr::separate(NAME.y, into = c("tract", "county", "state"), sep = ",") %>%
       dplyr::mutate(tract = gsub("[^0-9\\.]", "", tract))
   } 
   if (geo_small == "block group") {
-    di_data <- sf::st_drop_geometry(di_data) %>%
+    v_data <- sf::st_drop_geometry(v_data) %>%
       tidyr::separate(NAME.y, into = c("block.group", "tract", "county", "state"), sep = ",") %>%
       dplyr::mutate(tract = gsub("[^0-9\\.]", "", tract),
                     block.group = gsub("[^0-9\\.]", "", block.group))
   } 
   
-  # Grouping IDs for DI computation
+  # Grouping IDs for R computation
   if (geo_large == "tract") {
-    di_data <- di_data %>%
+    v_data <- v_data %>%
       dplyr::mutate(oid = paste(.$STATEFP, .$COUNTYFP, .$TRACTCE, sep = ""),
                     state = stringr::str_trim(state),
                     county = stringr::str_trim(county))
   }
   if (geo_large == "county") {
-    di_data <- di_data %>%
+    v_data <- v_data %>%
       dplyr::mutate(oid = paste(.$STATEFP, .$COUNTYFP, sep = ""),
                     state = stringr::str_trim(state),
                     county = stringr::str_trim(county))
   }
   if (geo_large == "state") {
-    di_data <- di_data %>%
+    v_data <- v_data %>%
       dplyr::mutate(oid = .$STATEFP,
                     state = stringr::str_trim(state))
   }
-
+  
   # Count of racial/ethnic subgroup populations
   ## Count of racial/ethnic comparison subgroup population
   if (length(in_subgroup) == 1) {
-    di_data <- di_data %>%
+    v_data <- v_data %>%
       dplyr::mutate(subgroup = .[ , in_subgroup])
   } else {
-    di_data <- di_data %>%
+    v_data <- v_data %>%
       dplyr::mutate(subgroup = rowSums(.[ , in_subgroup]))
   }
-  ## Count of racial/ethnic reference subgroup population
-  if (length(in_subgroup_ref) == 1) {
-    di_data <- di_data %>%
-      dplyr::mutate(subgroup_ref = .[ , in_subgroup_ref])
-  } else {
-    di_data <- di_data %>%
-      dplyr::mutate(subgroup_ref = rowSums(.[ , in_subgroup_ref]))
-  }
-
-  # Compute DI
-  ## From Duncan & Duncan (1955) https://doi.org/10.2307/2088328
-  ## D_{jt} = 1/2 \sum_{i=1}^{k} | \frac{x_{ijt}}{X_{jt}}-\frac{y_{ijt}}{Y_{jt}}|
-  ## Where for k smaller geographies:
-  ## D_{jt} denotes the DI of larger geography j at time t
-  ## x_{ijt} denotes the racial/ethnic subgroup population of smaller geography i within larger geography j at time t
-  ## X_{jt} denotes the racial/ethnic subgroup population of larger geography j at time t
-  ## y_{ijt} denotes the racial/ethnic referent subgroup population of smaller geography i within larger geography j at time t
-  ## Y_{jt} denotes the racial/ethnic referent subgroup population of larger geography j at time t
-
+  
+  # Compute V or \mathit{Eta}^{2}
+  ## From White (1986) https://doi.org/10.2307/3644339
+  ## V = \mathit{Eta}^2 = [(_{x}P_{x}^* - P) / (1 - P)]
+  ## Where:
+  ## _{x}P_{x}^* denotes the Isolation Index (Bell) of subgroup x
+  ## P denotes the proportion of subgroup x of study (reference) area
+  
   ## Compute
-  DItmp <- di_data %>%
-    split(., f = list(di_data$oid)) %>%
-    lapply(., FUN = di_fun, omit_NAs = omit_NAs) %>%
+  Vtmp <- v_data %>%
+    split(., f = list(v_data$oid)) %>%
+    lapply(., FUN = v_fun, omit_NAs = omit_NAs) %>%
     utils::stack(.) %>%
-    dplyr::mutate(DI = values,
+    dplyr::mutate(V = values,
                   oid = ind) %>%
-    dplyr::select(DI, oid)
-
+    dplyr::select(V, oid)
+  
   # Warning for missingness of census characteristics
-  missingYN <- di_data[ , c(in_subgroup, in_subgroup_ref)]
+  missingYN <- v_data[ , c("TotalPopE", in_subgroup)]
   names(missingYN) <- out_names
   missingYN <- missingYN %>%
     tidyr::pivot_longer(cols = dplyr::everything(),
@@ -208,50 +191,50 @@ duncan <- function(geo_large = "county", geo_small = "tract", year = 2020, subgr
     dplyr::summarise(total = dplyr::n(),
                      n_missing = sum(is.na(val)),
                      percent_missing = paste0(round(mean(is.na(val)) * 100, 2), " %"))
-
+  
   if (quiet == FALSE) {
     # Warning for missing census data
     if (sum(missingYN$n_missing) > 0) {
       message("Warning: Missing census data")
     }
   }
-
+  
   # Format output
   if (geo_large == "state") {
-    di <- merge(di_data, DItmp) %>%
-      dplyr::select(oid, state, DI) %>%
+    v <- merge(v_data, Vtmp) %>%
+      dplyr::select(oid, state, V) %>%
       unique(.) %>%
       dplyr::mutate(GEOID = oid) %>%
-      dplyr::select(GEOID, state, DI) %>%
+      dplyr::select(GEOID, state, V) %>%
       .[.$GEOID != "NANA", ]
   }
   if (geo_large == "county") {
-    di <- merge(di_data, DItmp) %>%
-      dplyr::select(oid, state, county, DI) %>%
+    v <- merge(v_data, Vtmp) %>%
+      dplyr::select(oid, state, county, V) %>%
       unique(.) %>%
       dplyr::mutate(GEOID = oid) %>%
-      dplyr::select(GEOID, state, county, DI) %>%
+      dplyr::select(GEOID, state, county, V) %>%
       .[.$GEOID != "NANA", ]
   }
   if (geo_large == "tract") {
-    di <- merge(di_data, DItmp) %>%
-      dplyr::select(oid, state, county, tract, DI) %>%
+    v <- merge(v_data, Vtmp) %>%
+      dplyr::select(oid, state, county, tract, V) %>%
       unique(.) %>%
       dplyr::mutate(GEOID = oid) %>%
-      dplyr::select(GEOID, state, county, tract, DI) %>%
+      dplyr::select(GEOID, state, county, tract, V) %>%
       .[.$GEOID != "NANA", ]
   }
-
-  di <- di %>%
+  
+  v <- v %>%
     dplyr::arrange(GEOID) %>%
     dplyr::as_tibble()
   
-  di_data <- di_data %>%
+  v_data <- v_data %>%
     dplyr::arrange(GEOID) %>%
     dplyr::as_tibble() 
-
-  out <- list(di = di,
-              di_data = di_data,
+  
+  out <- list(v = v,
+              v_data = v_data,
               missing = missingYN)
   
   return(out)

@@ -1,15 +1,15 @@
 #' Gini Index based on Gini (1921) 
 #' 
-#' Retrieve the Gini Index values.
+#' Retrieve the aspatial Gini Index of income inequality.
 #'
 #' @param geo Character string specifying the geography of the data either census tracts \code{geo = "tract"} (the default) or counties \code{geo = "county"}.
 #' @param year Numeric. The year to compute the estimate. The default is 2020, and the years 2009 onward are currently available.
 #' @param quiet Logical. If TRUE, will display messages about potential missing census information
 #' @param ... Arguments passed to \code{\link[tidycensus]{get_acs}} to select state, county, and other arguments for census characteristics
 #'
-#' @details This function will retrieve the Gini Index of U.S. census tracts or counties for a specified geographical extent (e.g., the entire U.S. or a single state) based on Gini (1921) \doi{10.2307/2223319}.
+#' @details This function will retrieve the aspatial Gini Index of U.S. census tracts or counties for a specified geographical extent (e.g., the entire U.S. or a single state) based on Gini (1921) \doi{10.2307/2223319}.
 #' 
-#' The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey estimates of the Gini Index (ACS: B19083). The estimates are available for 2009 onward when ACS-5 data are available but are available from other U.S. Census Bureau surveys.
+#' The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey estimates of the Gini Index for income inequality (ACS: B19083). The estimates are available for 2009 onward when ACS-5 data are available but are available from other U.S. Census Bureau surveys.
 #' 
 #' Use the internal \code{state} and \code{county} arguments within the \code{\link[tidycensus]{get_acs}} function to specify geographic extent of the data output.
 #' 
@@ -52,24 +52,24 @@ gini <- function(geo = "tract", year = 2020, quiet = FALSE, ...) {
   vars <- c(gini = "B19083_001")
   
   # Acquire Gini Index
-  gini_vars <- suppressMessages(suppressWarnings(tidycensus::get_acs(geography = geo,
+  gini_data <- suppressMessages(suppressWarnings(tidycensus::get_acs(geography = geo,
                                                                      year = year, 
                                                                      output = "wide",
                                                                      variables = vars, ...)))
   
   if (geo == "tract") {
-    gini_vars <- gini_vars %>%
+    gini_data <- gini_data %>%
       tidyr::separate(NAME, into = c("tract", "county", "state"), sep = ",") %>%
       dplyr::mutate(tract = gsub("[^0-9\\.]","", tract))
   } else {
-    gini_vars <- gini_vars %>% tidyr::separate(NAME, into = c("county", "state"), sep = ",") 
+    gini_data <- gini_data %>% tidyr::separate(NAME, into = c("county", "state"), sep = ",") 
   }
   
-  gini_vars <- gini_vars %>%
+  gini_data <- gini_data %>%
       dplyr::mutate(gini = giniE)
   
   # Warning for missingness of census characteristics
-  missingYN <- gini_vars %>%
+  missingYN <- gini_data %>%
     dplyr::select(gini)  %>%
     tidyr::pivot_longer(cols = dplyr::everything(),
                         names_to = "variable",
@@ -83,16 +83,14 @@ gini <- function(geo = "tract", year = 2020, quiet = FALSE, ...) {
     # Warning for missing census data
     if (sum(missingYN$n_missing) > 0) {
       message("Warning: Missing census data")
-    } else {
-      returnValue(missingYN)
     }
   }
   
   if (geo == "tract") {
-    gini <- gini_vars %>%
+    gini <- gini_data %>%
       dplyr::select(GEOID,  state, county, tract, gini)
   } else {
-    gini <- gini_vars %>%
+    gini <- gini_data %>%
       dplyr::select(GEOID,  state, county, gini) 
   }
   
