@@ -1,7 +1,7 @@
 Package: ndi
 Title: Neighborhood Deprivation Indices
-Version: 0.1.4
-Date: 2023-02-01
+Version: 0.1.5
+Date: 2024-01-23
 Authors@R: 
     c(person(given = "Ian D.",
              family = "Buller",
@@ -51,14 +51,15 @@ RoxygenNote: 7.2.3
 Depends: R (>= 3.5.0)
 Imports: car, dplyr, MASS, Matrix, psych, sf, stats, stringr,
         tidycensus, tidyr, utils
-Suggests: ggplot2, testthat, tigris, R.rsp, spelling, usethis
+Suggests: DescTools, ggplot2, testthat, tigris, R.rsp, spelling,
+        usethis
 VignetteBuilder: R.rsp
 Language: en-US
 URL: https://github.com/idblr/ndi
 BugReports: https://github.com/idblr/ndi/issues
 NeedsCompilation: no
-Packaged: 2023-02-01 15:57:50 UTC; ian.buller
+Packaged: 2024-01-23 18:32:01 UTC; ian.buller
 Author: Ian D. Buller [aut, cre, cph] (<https://orcid.org/0000-0001-9477-8582>),
   NCI [cph, fnd]
 Repository: CRAN
-Date/Publication: 2023-02-01 16:20:10 UTC
+Date/Publication: 2024-01-23 19:20:06 UTC
