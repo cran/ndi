@@ -2,16 +2,25 @@
 % Please edit documentation in R/anthopolos.R
 \name{anthopolos}
 \alias{anthopolos}
-\title{Racial Isolation Index based on Anthopolos \emph{et al.} (2011)}
+\title{Racial Isolation Index based on Anthopolos et al. (2011)}
 \usage{
-anthopolos(geo = "tract", year = 2020, subgroup, quiet = FALSE, ...)
+anthopolos(
+  geo = "tract",
+  year = 2020,
+  subgroup,
+  crs = "ESRI:102008",
+  quiet = FALSE,
+  ...
+)
 }
 \arguments{
-\item{geo}{Character string specifying the geography of the data either census tracts \code{geo = "tract"} (the default) or counties \code{geo = "county"}.}
+\item{geo}{Character string specifying the geography of the data either counties \code{geo = 'county'}, census tracts \code{geo = 'tract'} (the default), or census block groups \code{geo = 'cbg'}.}
 
 \item{year}{Numeric. The year to compute the estimate. The default is 2020, and the years 2009 onward are currently available.}
 
-\item{subgroup}{Character string specifying the racial/ethnic subgroup(s). See Details for available choices.}
+\item{subgroup}{Character string specifying the racial or ethnic subgroup(s). See Details for available choices.}
+
+\item{crs}{Numeric or character string specifying the coordinate reference system to compute the distance-based metric. The default is Albers North America \code{crs = 'ESRI:102008'}.}
 
 \item{quiet}{Logical. If TRUE, will display messages about potential missing census information. The default is FALSE.}
 
@@ -21,59 +30,70 @@ anthopolos(geo = "tract", year = 2020, subgroup, quiet = FALSE, ...)
 An object of class 'list'. This is a named list with the following components:
 
 \describe{
-\item{\code{ri}}{An object of class 'tbl' for the GEOID, name, RI, and raw census values of specified census geographies.}
-\item{\code{missing}}{An object of class 'tbl' of the count and proportion of missingness for each census variable used to compute RI.}
+\item{\code{ri}}{An object of class 'tbl' for the GEOID, name, \emph{RI}, and raw census values of specified census geographies.}
+\item{\code{missing}}{An object of class 'tbl' of the count and proportion of missingness for each census variable used to compute \emph{RI}.}
 }
 }
 \description{
 Compute the spatial Racial Isolation Index (Anthopolos) of selected subgroup(s).
 }
 \details{
-This function will compute the spatial Racial Isolation Index (RI) of U.S. census tracts or counties for a specified geographical extent (e.g., the entire U.S. or a single state) based on Anthopolos \emph{et al.} (2011) \doi{10.1016/j.sste.2011.06.002} who originally designed the metric for the racial isolation of non-Hispanic Black individuals. This function provides the computation of RI for any of the U.S. Census Bureau race/ethnicity subgroups (including Hispanic and non-Hispanic individuals).
+This function will compute the spatial Racial Isolation Index (\emph{RI}) of U.S. census tracts or counties for a specified geographical extent (e.g., the entire U.S. or a single state) based on Anthopolos et al. (2011) \doi{10.1016/j.sste.2011.06.002} who originally designed the metric for the racial isolation of non-Hispanic Black individuals. This function provides the computation of \emph{RI} for any of the U.S. Census Bureau race or ethnicity subgroups (including Hispanic and non-Hispanic individuals).
 
-The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey characteristics used for the geospatial computation. The yearly estimates are available for 2009 onward when ACS-5 data are available but are available from other U.S. Census Bureau surveys. The twenty racial/ethnic subgroups (U.S. Census Bureau definitions) are:
+The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey characteristics used for the geospatial computation. The yearly estimates are available for 2009 onward when ACS-5 data are available but are available from other U.S. Census Bureau surveys. The twenty racial or ethnic subgroups (U.S. Census Bureau definitions) are:
 \itemize{
-\item \strong{B03002_002}: not Hispanic or Latino \code{"NHoL"}
-\item \strong{B03002_003}: not Hispanic or Latino, white alone\code{"NHoLW"}
-\item \strong{B03002_004}: not Hispanic or Latino, Black or African American alone \code{"NHoLB"}
-\item \strong{B03002_005}: not Hispanic or Latino, American Indian and Alaska Native alone \code{"NHoLAIAN"}
-\item \strong{B03002_006}: not Hispanic or Latino, Asian alone \code{"NHoLA"}
-\item \strong{B03002_007}: not Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{"NHoLNHOPI"}
-\item \strong{B03002_008}: not Hispanic or Latino, Some other race alone \code{"NHoLSOR"}
-\item \strong{B03002_009}: not Hispanic or Latino, Two or more races \code{"NHoLTOMR"}
-\item \strong{B03002_010}: not Hispanic or Latino, Two races including Some other race \code{"NHoLTRiSOR"}
-\item \strong{B03002_011}: not Hispanic or Latino, Two races excluding Some other race, and three or more races \code{"NHoLTReSOR"}
-\item \strong{B03002_012}: Hispanic or Latino \code{"HoL"}
-\item \strong{B03002_013}: Hispanic or Latino, white alone \code{"HoLW"}
-\item \strong{B03002_014}: Hispanic or Latino, Black or African American alone \code{"HoLB"}
-\item \strong{B03002_015}: Hispanic or Latino, American Indian and Alaska Native alone \code{"HoLAIAN"}
-\item \strong{B03002_016}: Hispanic or Latino, Asian alone \code{"HoLA"}
-\item \strong{B03002_017}: Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{"HoLNHOPI"}
-\item \strong{B03002_018}: Hispanic or Latino, Some other race alone \code{"HoLSOR"}
-\item \strong{B03002_019}: Hispanic or Latino, Two or more races \code{"HoLTOMR"}
-\item \strong{B03002_020}: Hispanic or Latino, Two races including Some other race \code{"HoLTRiSOR"}
-\item \strong{B03002_021}: Hispanic or Latino, Two races excluding Some other race, and three or more races \code{"HoLTReSOR"}
+\item \strong{B03002_002}: not Hispanic or Latino \code{'NHoL'}
+\item \strong{B03002_003}: not Hispanic or Latino, white alone\code{'NHoLW'}
+\item \strong{B03002_004}: not Hispanic or Latino, Black or African American alone \code{'NHoLB'}
+\item \strong{B03002_005}: not Hispanic or Latino, American Indian and Alaska Native alone \code{'NHoLAIAN'}
+\item \strong{B03002_006}: not Hispanic or Latino, Asian alone \code{'NHoLA'}
+\item \strong{B03002_007}: not Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{'NHoLNHOPI'}
+\item \strong{B03002_008}: not Hispanic or Latino, Some other race alone \code{'NHoLSOR'}
+\item \strong{B03002_009}: not Hispanic or Latino, Two or more races \code{'NHoLTOMR'}
+\item \strong{B03002_010}: not Hispanic or Latino, Two races including Some other race \code{'NHoLTRiSOR'}
+\item \strong{B03002_011}: not Hispanic or Latino, Two races excluding Some other race, and three or more races \code{'NHoLTReSOR'}
+\item \strong{B03002_012}: Hispanic or Latino \code{'HoL'}
+\item \strong{B03002_013}: Hispanic or Latino, white alone \code{'HoLW'}
+\item \strong{B03002_014}: Hispanic or Latino, Black or African American alone \code{'HoLB'}
+\item \strong{B03002_015}: Hispanic or Latino, American Indian and Alaska Native alone \code{'HoLAIAN'}
+\item \strong{B03002_016}: Hispanic or Latino, Asian alone \code{'HoLA'}
+\item \strong{B03002_017}: Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{'HoLNHOPI'}
+\item \strong{B03002_018}: Hispanic or Latino, Some other race alone \code{'HoLSOR'}
+\item \strong{B03002_019}: Hispanic or Latino, Two or more races \code{'HoLTOMR'}
+\item \strong{B03002_020}: Hispanic or Latino, Two races including Some other race \code{'HoLTRiSOR'}
+\item \strong{B03002_021}: Hispanic or Latino, Two races excluding Some other race, and three or more races \code{'HoLTReSOR'}
 }
 
-Use the internal \code{state} and \code{county} arguments within the \code{\link[tidycensus]{get_acs}} function to specify geographic extent of the data output. NOTE: Current version does not correct for edge effects (e.g., census geographies along the specified spatial extent border, coastline, or U.S.-Mexico / U.S.-Canada border) may have few neighboring census geographies, and RI values in these census geographies may be unstable. A stop-gap solution for the former source of edge effect is to compute the RI for neighboring census geographies (i.e., the states bordering a study area of interest) and then use the estimates of the study area of interest.
+Use the internal \code{state} and \code{county} arguments within the \code{\link[tidycensus]{get_acs}} function to specify geographic extent of the data output. NOTE: Current version does not correct for edge effects (e.g., census geographies along the specified spatial extent border, coastline, or U.S.-Mexico / U.S.-Canada border) may have few neighboring census geographies, and \emph{RI} values in these census geographies may be unstable. A stop-gap solution for the former source of edge effect is to compute the \emph{RI} for neighboring census geographies (i.e., the states bordering a study area of interest) and then use the estimates of the study area of interest.
 
-A census geography (and its neighbors) that has nearly all of its population who identify with the specified race/ethnicity subgroup(s) (e.g., non-Hispanic or Latino, Black or African American alone) will have an RI value close to 1. In contrast, a census geography (and its neighbors) that has nearly none of its population who identify with the specified race/ethnicity subgroup(s) (e.g., not non-Hispanic or Latino, Black or African American alone) will have an RI value close to 0.
+A census geography (and its neighbors) that has nearly all of its population who identify with the specified race or ethnicity subgroup(s) (e.g., non-Hispanic or Latino, Black or African American alone) will have an \emph{RI} value close to 1. In contrast, a census geography (and its neighbors) that has nearly none of its population who identify with the specified race or ethnicity subgroup(s) (e.g., not non-Hispanic or Latino, Black or African American alone) will have an \emph{RI} value close to 0.
 }
 \examples{
 \dontrun{
 # Wrapped in \dontrun{} because these examples require a Census API key.
-  
-  # Tract-level metric (2020)
-  anthopolos(geo = "tract", state = "GA", 
-             year = 2020, subgroup = c("NHoLB", "HoLB"))
-  
-  # County-level metric (2020)
-  anthopolos(geo = "county", state = "GA", 
-             year = 2020, subgroup = c("NHoLB", "HoLB"))
-  
+
+  # Racial Isolation Index (a measure of isolation)
+  ## of Black populations
+  ## in census tracts of Georgia, U.S.A. (2020)
+  anthopolos(
+    geo = 'tract',
+    state = 'GA',
+    year = 2020,
+    subgroup = c('NHoLB', 'HoLB')
+   )
+
 }
 
 }
+\references{
+Anthopolos, R, James, SA, Gelfand, AE, & Miranda, ML (2011) A Spatial Measure of Neighborhood Level Racial Isolation Applied to Low Birthweight, Preterm Birth, and Birthweight in North Carolina. \emph{Spatial and Spatio-temporal Epidemiology}, 2(4):235-246. \doi{10.1016/j.sste.2011.06.002}
+}
 \seealso{
 \code{\link[tidycensus]{get_acs}} for additional arguments for geographic extent selection (i.e., \code{state} and \code{county}).
+
+Other isolation indices: \code{\link{bemanian_beyer}}, \code{\link{lieberson}}, \code{\link{morgan_massey}}, \code{\link{white}}
+
+Interaction indices: \code{\link{bell}}, \code{\link{morgan_denton}}
+
+Education Isolation Index: \code{\link{bravo}}
 }

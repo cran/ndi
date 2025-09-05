@@ -2,7 +2,7 @@
 % Please edit documentation in R/bemanian_beyer.R
 \name{bemanian_beyer}
 \alias{bemanian_beyer}
-\title{Local Exposure and Isolation metric based on Bemanian & Beyer (2017)}
+\title{Local Exposure and Isolation based on Bemanian & Beyer (2017)}
 \usage{
 bemanian_beyer(
   geo_large = "county",
@@ -16,15 +16,15 @@ bemanian_beyer(
 )
 }
 \arguments{
-\item{geo_large}{Character string specifying the larger geographical unit of the data. The default is counties \code{geo_large = "county"}.}
+\item{geo_large}{Character string specifying the larger geographical unit of the data. The default is counties \code{geo_large = 'county'}.}
 
-\item{geo_small}{Character string specifying the smaller geographical unit of the data. The default is census tracts \code{geo_large = "tract"}.}
+\item{geo_small}{Character string specifying the smaller geographical unit of the data. The default is census tracts \code{geo_small = 'tract'}.}
 
 \item{year}{Numeric. The year to compute the estimate. The default is 2020, and the years 2009 onward are currently available.}
 
-\item{subgroup}{Character string specifying the racial/ethnic subgroup(s). See Details for available choices.}
+\item{subgroup}{Character string specifying the racial or ethnic subgroup(s). See Details for available choices.}
 
-\item{subgroup_ixn}{Character string specifying the racial/ethnic subgroup(s) as the interaction population. If the same as \code{subgroup}, will compute the simple isolation of the group. See Details for available choices.}
+\item{subgroup_ixn}{Character string specifying the racial or ethnic subgroup(s) as the interaction population. If the same as \code{subgroup}, will compute the simple isolation of the group. See Details for available choices.}
 
 \item{omit_NAs}{Logical. If FALSE, will compute index for a larger geographical unit only if all of its smaller geographical units have values. The default is TRUE.}
 
@@ -36,61 +36,75 @@ bemanian_beyer(
 An object of class 'list'. This is a named list with the following components:
 
 \describe{
-\item{\code{lexis}}{An object of class 'tbl' for the GEOID, name, and LEx/Is at specified smaller census geographies.}
+\item{\code{lexis}}{An object of class 'tbl' for the GEOID, name, and \emph{LEx/Is} at specified smaller census geographies.}
 \item{\code{lexis_data}}{An object of class 'tbl' for the raw census values at specified smaller census geographies.}
-\item{\code{missing}}{An object of class 'tbl' of the count and proportion of missingness for each census variable used to compute LEx/Is.}
+\item{\code{missing}}{An object of class 'tbl' of the count and proportion of missingness for each census variable used to compute \emph{LEx/Is}.}
 }
 }
 \description{
-Compute the aspatial Local Exposure and Isolation (Bemanian & Beyer) metric of a selected racial/ethnic subgroup(s) and U.S. geographies.
+Compute the aspatial Local Exposure and Isolation (Bemanian & Beyer) of a selected racial or ethnic subgroup(s) and U.S. geographies.
 }
 \details{
-This function will compute the aspatial Local Exposure and Isolation (LEx/Is) metric of selected racial/ethnic subgroups and U.S. geographies for a specified geographical extent (e.g., the entire U.S. or a single state) based on Bemanian & Beyer (2017) \doi{10.1158/1055-9965.EPI-16-0926}. This function provides the computation of LEx/Is for any of the U.S. Census Bureau race/ethnicity subgroups (including Hispanic and non-Hispanic individuals).
+This function will compute the aspatial Local Exposure and Isolation (\emph{LEx/Is}) of selected racial or ethnic subgroups and U.S. geographies for a specified geographical extent (e.g., the entire U.S. or a single state) based on Bemanian & Beyer (2017) \doi{10.1158/1055-9965.EPI-16-0926}. This function provides the computation of \emph{LEx/Is} for any of the U.S. Census Bureau race or ethnicity subgroups (including Hispanic and non-Hispanic individuals).
 
-The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey characteristics used for the aspatial computation. The yearly estimates are available for 2009 onward when ACS-5 data are available but are available from other U.S. Census Bureau surveys. The twenty racial/ethnic subgroups (U.S. Census Bureau definitions) are:
+The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey characteristics used for the aspatial computation. The yearly estimates are available for 2009 onward when ACS-5 data are available (2010 onward for \code{geo_large = 'cbsa'} and 2011 onward for \code{geo_large = 'place'}, \code{geo_large = 'csa'}, or \code{geo_large = 'metro'}) but may be available from other U.S. Census Bureau surveys. The twenty racial or ethnic subgroups (U.S. Census Bureau definitions) are:
 \itemize{
-\item \strong{B03002_002}: not Hispanic or Latino \code{"NHoL"}
-\item \strong{B03002_003}: not Hispanic or Latino, white alone \code{"NHoLW"}
-\item \strong{B03002_004}: not Hispanic or Latino, Black or African American alone \code{"NHoLB"}
-\item \strong{B03002_005}: not Hispanic or Latino, American Indian and Alaska Native alone \code{"NHoLAIAN"}
-\item \strong{B03002_006}: not Hispanic or Latino, Asian alone \code{"NHoLA"}
-\item \strong{B03002_007}: not Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{"NHoLNHOPI"}
-\item \strong{B03002_008}: not Hispanic or Latino, Some other race alone \code{"NHoLSOR"}
-\item \strong{B03002_009}: not Hispanic or Latino, Two or more races \code{"NHoLTOMR"}
-\item \strong{B03002_010}: not Hispanic or Latino, Two races including Some other race \code{"NHoLTRiSOR"}
-\item \strong{B03002_011}: not Hispanic or Latino, Two races excluding Some other race, and three or more races \code{"NHoLTReSOR"}
-\item \strong{B03002_012}: Hispanic or Latino \code{"HoL"}
-\item \strong{B03002_013}: Hispanic or Latino, white alone \code{"HoLW"}
-\item \strong{B03002_014}: Hispanic or Latino, Black or African American alone \code{"HoLB"}
-\item \strong{B03002_015}: Hispanic or Latino, American Indian and Alaska Native alone \code{"HoLAIAN"}
-\item \strong{B03002_016}: Hispanic or Latino, Asian alone \code{"HoLA"}
-\item \strong{B03002_017}: Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{"HoLNHOPI"}
-\item \strong{B03002_018}: Hispanic or Latino, Some other race alone \code{"HoLSOR"}
-\item \strong{B03002_019}: Hispanic or Latino, Two or more races \code{"HoLTOMR"}
-\item \strong{B03002_020}: Hispanic or Latino, Two races including Some other race \code{"HoLTRiSOR"}
-\item \strong{B03002_021}: Hispanic or Latino, Two races excluding Some other race, and three or more races \code{"HoLTReSOR"}
+\item \strong{B03002_002}: not Hispanic or Latino \code{'NHoL'}
+\item \strong{B03002_003}: not Hispanic or Latino, white alone \code{'NHoLW'}
+\item \strong{B03002_004}: not Hispanic or Latino, Black or African American alone \code{'NHoLB'}
+\item \strong{B03002_005}: not Hispanic or Latino, American Indian and Alaska Native alone \code{'NHoLAIAN'}
+\item \strong{B03002_006}: not Hispanic or Latino, Asian alone \code{'NHoLA'}
+\item \strong{B03002_007}: not Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{'NHoLNHOPI'}
+\item \strong{B03002_008}: not Hispanic or Latino, Some other race alone \code{'NHoLSOR'}
+\item \strong{B03002_009}: not Hispanic or Latino, Two or more races \code{'NHoLTOMR'}
+\item \strong{B03002_010}: not Hispanic or Latino, Two races including Some other race \code{'NHoLTRiSOR'}
+\item \strong{B03002_011}: not Hispanic or Latino, Two races excluding Some other race, and three or more races \code{'NHoLTReSOR'}
+\item \strong{B03002_012}: Hispanic or Latino \code{'HoL'}
+\item \strong{B03002_013}: Hispanic or Latino, white alone \code{'HoLW'}
+\item \strong{B03002_014}: Hispanic or Latino, Black or African American alone \code{'HoLB'}
+\item \strong{B03002_015}: Hispanic or Latino, American Indian and Alaska Native alone \code{'HoLAIAN'}
+\item \strong{B03002_016}: Hispanic or Latino, Asian alone \code{'HoLA'}
+\item \strong{B03002_017}: Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{'HoLNHOPI'}
+\item \strong{B03002_018}: Hispanic or Latino, Some other race alone \code{'HoLSOR'}
+\item \strong{B03002_019}: Hispanic or Latino, Two or more races \code{'HoLTOMR'}
+\item \strong{B03002_020}: Hispanic or Latino, Two races including Some other race \code{'HoLTRiSOR'}
+\item \strong{B03002_021}: Hispanic or Latino, Two races excluding Some other race, and three or more races \code{'HoLTReSOR'}
 }
 
 Use the internal \code{state} and \code{county} arguments within the \code{\link[tidycensus]{get_acs}} function to specify geographic extent of the data output.
 
-LEx/Is is a measure of the probability that two individuals living within a specific smaller geography (e.g., census tract) of either different (i.e., exposure) or the same (i.e., isolation) racial/ethnic subgroup(s) will interact, assuming that individuals within a smaller geography are randomly mixed. LEx/Is is standardized with a logit transformation and centered against an expected case that all races/ethnicities are evenly distributed across a larger geography. (Note: will adjust data by 0.025 if probabilities are zero, one, or undefined. The output will include a warning if adjusted. See \code{\link[car]{logit}} for additional details.)
+\emph{LEx/Is} is a measure of the probability that two individuals living within a specific smaller geographical unit (e.g., census tract) of either different (i.e., exposure) or the same (i.e., isolation) racial or ethnic subgroup(s) will interact, assuming that individuals within a smaller geographical unit are randomly mixed. \emph{LEx/Is} is standardized with a logit transformation and centered against an expected case that all races or ethnicities are evenly distributed across a larger geographical unit. (Note: will adjust data by 0.025 if probabilities are zero, one, or undefined. The output will include a warning if adjusted. See \code{\link[car]{logit}} for additional details.)
 
-LEx/Is can range from negative infinity to infinity. If LEx/Is is zero then the estimated probability of the interaction between two people of the given subgroup(s) within a smaller geography is equal to the expected probability if the subgroup(s) were perfectly mixed in the larger geography. If LEx/Is is greater than zero then the interaction is more likely to occur within the smaller geography than in the larger geography, and if LEx/Is is less than zero then the interaction is less likely to occur within the smaller geography than in the larger geography. Note: the exponentiation of each LEx/Is metric results in the odds ratio of the specific exposure or isolation of interest in a smaller geography relative to the larger geography.
+\emph{LEx/Is} can range from negative infinity to infinity. If \emph{LEx/Is} is zero then the estimated probability of the interaction between two people of the given subgroup(s) within a smaller geographical unit is equal to the expected probability if the subgroup(s) were perfectly mixed in the larger geographical unit. If \emph{LEx/Is} is greater than zero then the interaction is more likely to occur within the smaller geographical unit than in the larger geographical unit, and if \emph{LEx/Is} is less than zero then the interaction is less likely to occur within the smaller geographical unit than in the larger geographical unit. Note: the exponentiation of each \emph{LEx/Is} results in the odds ratio of the specific exposure or isolation of interest in a smaller geographical unit relative to the larger geographical unit.
 
-Larger geographies available include state \code{geo_large = "state"}, county \code{geo_large = "county"}, and census tract \code{geo_large = "tract"} levels. Smaller geographies available include, county \code{geo_small = "county"}, census tract \code{geo_small = "tract"}, and census block group \code{geo_small = "block group"} levels. If a larger geographical area is comprised of only one smaller geographical area (e.g., a U.S county contains only one census tract), then the LEx/Is value returned is NA.
+Larger geographical units available include states \code{geo_large = 'state'}, counties \code{geo_large = 'county'}, census tracts \code{geo_large = 'tract'}, census-designated places \code{geo_large = 'place'}, core-based statistical areas \code{geo_large = 'cbsa'}, combined statistical areas \code{geo_large = 'csa'}, and metropolitan divisions \code{geo_large = 'metro'}. Smaller geographical units available include, counties \code{geo_small = 'county'}, census tracts \code{geo_small = 'tract'}, and census block groups \code{geo_small = 'cbg'}. If a larger geographical unit is comprised of only one smaller geographical unit (e.g., a U.S county contains only one census tract), then the \emph{LEx/Is} value returned is NA. If the larger geographical unit is census-designated places \code{geo_large = 'place'}, core-based statistical areas \code{geo_large = 'cbsa'}, combined statistical areas \code{geo_large = 'csa'}, or metropolitan divisions \code{geo_large = 'metro'}, only the smaller geographical units completely within a larger geographical unit are considered in the \emph{LEx/Is} computation (see internal \code{\link[sf]{st_within}} function for more information) and recommend specifying all states within which the interested larger geographical unit are located using the internal \code{state} argument to ensure all appropriate smaller geographical units are included in the \emph{LEx/Is} computation.
 }
 \examples{
 \dontrun{
 # Wrapped in \dontrun{} because these examples require a Census API key.
-  
-  # Isolation of non-Hispanic Black vs. non-Hispanic white populations
-  ## of census tracts within Georgia, U.S.A., counties (2020)
-  bemanian_beyer(geo_large = "county", geo_small = "tract", state = "GA",
-                 year = 2020, subgroup = "NHoLB", subgroup_ixn = "NHoLW")
-  
+
+  # Local Exposure and Isolation 
+  ## of non-Hispanic Black vs. non-Hispanic white populations
+  ## in census tracts within counties of Georgia, U.S.A. (2020)
+  bemanian_beyer(
+    geo_large = 'county',
+    geo_small = 'tract',
+    state = 'GA',
+    year = 2020,
+    subgroup = 'NHoLB',
+    subgroup_ixn = 'NHoLW'
+   )
+
 }
 
 }
+\references{
+Bemanian, A, & Beyer, KMM (2017) Measures Matter: The Local Exposure/Isolation (LEx/Is) Metrics and Relationships between Local-Level Segregation and Breast Cancer Survival. \emph{Cancer Epidemiology, Biomarkers & Prevention}, 26(4):516-524. \doi{10.1158/1055-9965.EPI-16-0926}
+}
 \seealso{
 \code{\link[tidycensus]{get_acs}} for additional arguments for geographic extent selection (i.e., \code{state} and \code{county}).
+
+Other isolation indices: \code{\link{anthopolos}}, \code{\link{lieberson}}, \code{\link{morgan_massey}}, \code{\link{white}}
+
+Interaction indices: \code{\link{bell}}, \code{\link{morgan_denton}}
 }

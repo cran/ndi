@@ -10,21 +10,24 @@ atkinson(
   year = 2020,
   subgroup,
   epsilon = 0.5,
+  holder = FALSE,
   omit_NAs = TRUE,
   quiet = FALSE,
   ...
 )
 }
 \arguments{
-\item{geo_large}{Character string specifying the larger geographical unit of the data. The default is counties \code{geo_large = "county"}.}
+\item{geo_large}{Character string specifying the larger geographical unit of the data. The default is counties \code{geo_large = 'county'}.}
 
-\item{geo_small}{Character string specifying the smaller geographical unit of the data. The default is census tracts \code{geo_large = "tract"}.}
+\item{geo_small}{Character string specifying the smaller geographical unit of the data. The default is census tracts \code{geo_small = 'tract'}.}
 
 \item{year}{Numeric. The year to compute the estimate. The default is 2020, and the years 2009 onward are currently available.}
 
-\item{subgroup}{Character string specifying the income or racial/ethnic subgroup(s) as the comparison population. See Details for available choices.}
+\item{subgroup}{Character string specifying the income or racial or ethnic subgroup(s) as the comparison population. See Details for available choices.}
 
 \item{epsilon}{Numerical. Shape parameter that denotes the aversion to inequality. Value must be between 0 and 1.0 (the default is 0.5).}
+
+\item{holder}{Logical. If TRUE, will compute index using the Hölder mean. If FALSE, will not compute with the Hölder mean. The default is FALSE.}
 
 \item{omit_NAs}{Logical. If FALSE, will compute index for a larger geographical unit only if all of its smaller geographical units have values. The default is TRUE.}
 
@@ -36,61 +39,89 @@ atkinson(
 An object of class 'list'. This is a named list with the following components:
 
 \describe{
-\item{\code{ai}}{An object of class 'tbl' for the GEOID, name, and AI at specified larger census geographies.}
-\item{\code{ai_data}}{An object of class 'tbl' for the raw census values at specified smaller census geographies.}
-\item{\code{missing}}{An object of class 'tbl' of the count and proportion of missingness for each census variable used to compute AI.}
+\item{\code{a}}{An object of class 'tbl' for the GEOID, name, and \emph{A} at specified larger census geographies.}
+\item{\code{a_data}}{An object of class 'tbl' for the raw census values at specified smaller census geographies.}
+\item{\code{missing}}{An object of class 'tbl' of the count and proportion of missingness for each census variable used to compute \emph{A}.}
 }
 }
 \description{
-Compute the aspatial Atkinson Index of income or selected racial/ethnic subgroup(s) and U.S. geographies.
+Compute the aspatial Atkinson Index of income or selected racial or ethnic subgroup(s) and U.S. geographies.
 }
 \details{
-This function will compute the aspatial Atkinson Index (AI) of income or selected racial/ethnic subgroups and U.S. geographies for a specified geographical extent (e.g., the entire U.S. or a single state) based on Atkinson (1970) \doi{10.1016/0022-0531(70)90039-6}. This function provides the computation of AI for median household income and any of the U.S. Census Bureau race/ethnicity subgroups (including Hispanic and non-Hispanic individuals).
+This function will compute the aspatial Atkinson Index (\emph{A}) of income or selected racial or ethnic subgroups and U.S. geographies for a specified geographical extent (e.g., the entire U.S. or a single state) based on Atkinson (1970) \doi{10.1016/0022-0531(70)90039-6}. This function provides the computation of \emph{A} for median household income and any of the U.S. Census Bureau race or ethnicity subgroups (including Hispanic and non-Hispanic individuals).
 
-The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey characteristics used for the aspatial computation. The yearly estimates are available for 2009 onward when ACS-5 data are available but are available from other U.S. Census Bureau surveys. When \code{subgroup = "MedHHInc"}, the metric will be computed for median household income ("B19013_001"). The twenty racial/ethnic subgroups (U.S. Census Bureau definitions) are:
+The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey characteristics used for the aspatial computation. The yearly estimates are available for 2009 onward when ACS-5 data are available (2010 onward for \code{geo_large = 'cbsa'} and 2011 onward for \code{geo_large = 'place'}, \code{geo_large = 'csa'}, or \code{geo_large = 'metro'}) but may be available from other U.S. Census Bureau surveys. When \code{subgroup = 'MedHHInc'}, the metric will be computed for median household income ('B19013_001') using the Hölder mean. The twenty racial or ethnic subgroups (U.S. Census Bureau definitions) are:
 \itemize{
-\item \strong{B03002_002}: not Hispanic or Latino \code{"NHoL"}
-\item \strong{B03002_003}: not Hispanic or Latino, white alone \code{"NHoLW"}
-\item \strong{B03002_004}: not Hispanic or Latino, Black or African American alone \code{"NHoLB"}
-\item \strong{B03002_005}: not Hispanic or Latino, American Indian and Alaska Native alone \code{"NHoLAIAN"}
-\item \strong{B03002_006}: not Hispanic or Latino, Asian alone \code{"NHoLA"}
-\item \strong{B03002_007}: not Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{"NHoLNHOPI"}
-\item \strong{B03002_008}: not Hispanic or Latino, Some other race alone \code{"NHoLSOR"}
-\item \strong{B03002_009}: not Hispanic or Latino, Two or more races \code{"NHoLTOMR"}
-\item \strong{B03002_010}: not Hispanic or Latino, Two races including Some other race \code{"NHoLTRiSOR"}
-\item \strong{B03002_011}: not Hispanic or Latino, Two races excluding Some other race, and three or more races \code{"NHoLTReSOR"}
-\item \strong{B03002_012}: Hispanic or Latino \code{"HoL"}
-\item \strong{B03002_013}: Hispanic or Latino, white alone \code{"HoLW"}
-\item \strong{B03002_014}: Hispanic or Latino, Black or African American alone \code{"HoLB"}
-\item \strong{B03002_015}: Hispanic or Latino, American Indian and Alaska Native alone \code{"HoLAIAN"}
-\item \strong{B03002_016}: Hispanic or Latino, Asian alone \code{"HoLA"}
-\item \strong{B03002_017}: Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{"HoLNHOPI"}
-\item \strong{B03002_018}: Hispanic or Latino, Some other race alone \code{"HoLSOR"}
-\item \strong{B03002_019}: Hispanic or Latino, Two or more races \code{"HoLTOMR"}
-\item \strong{B03002_020}: Hispanic or Latino, Two races including Some other race \code{"HoLTRiSOR"}
-\item \strong{B03002_021}: Hispanic or Latino, Two races excluding Some other race, and three or more races \code{"HoLTReSOR"}
+\item \strong{B03002_002}: not Hispanic or Latino \code{'NHoL'}
+\item \strong{B03002_003}: not Hispanic or Latino, white alone \code{'NHoLW'}
+\item \strong{B03002_004}: not Hispanic or Latino, Black or African American alone \code{'NHoLB'}
+\item \strong{B03002_005}: not Hispanic or Latino, American Indian and Alaska Native alone \code{'NHoLAIAN'}
+\item \strong{B03002_006}: not Hispanic or Latino, Asian alone \code{'NHoLA'}
+\item \strong{B03002_007}: not Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{'NHoLNHOPI'}
+\item \strong{B03002_008}: not Hispanic or Latino, Some other race alone \code{'NHoLSOR'}
+\item \strong{B03002_009}: not Hispanic or Latino, Two or more races \code{'NHoLTOMR'}
+\item \strong{B03002_010}: not Hispanic or Latino, Two races including Some other race \code{'NHoLTRiSOR'}
+\item \strong{B03002_011}: not Hispanic or Latino, Two races excluding Some other race, and three or more races \code{'NHoLTReSOR'}
+\item \strong{B03002_012}: Hispanic or Latino \code{'HoL'}
+\item \strong{B03002_013}: Hispanic or Latino, white alone \code{'HoLW'}
+\item \strong{B03002_014}: Hispanic or Latino, Black or African American alone \code{'HoLB'}
+\item \strong{B03002_015}: Hispanic or Latino, American Indian and Alaska Native alone \code{'HoLAIAN'}
+\item \strong{B03002_016}: Hispanic or Latino, Asian alone \code{'HoLA'}
+\item \strong{B03002_017}: Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{'HoLNHOPI'}
+\item \strong{B03002_018}: Hispanic or Latino, Some other race alone \code{'HoLSOR'}
+\item \strong{B03002_019}: Hispanic or Latino, Two or more races \code{'HoLTOMR'}
+\item \strong{B03002_020}: Hispanic or Latino, Two races including Some other race \code{'HoLTRiSOR'}
+\item \strong{B03002_021}: Hispanic or Latino, Two races excluding Some other race, and three or more races \code{'HoLTReSOR'}
 }
 
 Use the internal \code{state} and \code{county} arguments within the \code{\link[tidycensus]{get_acs}} function to specify geographic extent of the data output.
 
-AI is a measure of the evenness of residential inequality (e.g., racial/ethnic segregation) when comparing smaller geographical areas to larger ones within which the smaller geographical areas are located. The AI metric can range in value from 0 to 1 with smaller values indicating lower levels of inequality (e.g., less segregation).
+\emph{A} is a measure of the evenness of residential inequality (e.g., racial or ethnic segregation) when comparing smaller geographical units to larger ones within which the smaller geographical units are located. \emph{A} can range in value from 0 to 1 with smaller values indicating lower levels of inequality (e.g., less segregation).
 
-The \code{epsilon} argument that determines how to weight the increments to inequality contributed by different proportions of the Lorenz curve. A user must explicitly decide how heavily to weight smaller geographical units at different points on the Lorenz curve (i.e., whether the index should take greater account of differences among areas of over- or under-representation). The \code{epsilon} argument must have values between 0 and 1.0. For \code{0 <= epsilon < 0.5} or less "inequality-averse," smaller geographical units with a subgroup proportion smaller than the subgroup proportion of the larger geographical unit contribute more to inequality ("over-representation"). For \code{0.5 < epsilon <= 1.0} or more "inequality-averse," smaller geographical units with a subgroup proportion larger than the subgroup proportion of the larger geographical unit contribute more to inequality ("under-representation"). If \code{epsilon = 0.5} (the default), units of over- and under-representation contribute equally to the index. See Section 2.3 of Saint-Jacques \emph{et al.} (2020) \doi{10.48550/arXiv.2002.05819} for one method to select \code{epsilon}.
+The \code{epsilon} argument that determines how to weight the increments to inequality contributed by different proportions of the Lorenz curve. A user must explicitly decide how heavily to weight smaller geographical units at different points on the Lorenz curve (i.e., whether the index should take greater account of differences among units of over- or under-representation). The \code{epsilon} argument must have values between 0 and 1.0. For \code{0 <= epsilon < 0.5} or less 'inequality-averse,' smaller geographical units with a subgroup proportion smaller than the subgroup proportion of the larger geographical unit contribute more to inequality ('over-representation'). For \code{0.5 < epsilon <= 1.0} or more 'inequality-averse,' smaller geographical units with a subgroup proportion larger than the subgroup proportion of the larger geographical unit contribute more to inequality ('under-representation'). If \code{epsilon = 0.5} (the default), units of over- and under-representation contribute equally to the index. See Section 2.3 of Saint-Jacques et al. (2020) \doi{10.48550/arXiv.2002.05819} for one method to select \code{epsilon}.
 
-Larger geographies available include state \code{geo_large = "state"}, county \code{geo_large = "county"}, and census tract \code{geo_large = "tract"} levels. Smaller geographies available include, county \code{geo_small = "county"}, census tract \code{geo_small = "tract"}, and census block group \code{geo_small = "block group"} levels. If a larger geographical area is comprised of only one smaller geographical area (e.g., a U.S county contains only one census tract), then the AI value returned is NA.
+Larger geographical units available include states \code{geo_large = 'state'}, counties \code{geo_large = 'county'}, census tracts \code{geo_large = 'tract'}, census-designated places \code{geo_large = 'place'}, core-based statistical areas \code{geo_large = 'cbsa'}, combined statistical areas \code{geo_large = 'csa'}, and metropolitan divisions \code{geo_large = 'metro'}. Smaller geographical units available include, counties \code{geo_small = 'county'}, census tracts \code{geo_small = 'tract'}, and census block groups \code{geo_small = 'cbg'}. If a larger geographical unit is comprised of only one smaller geographical unit (e.g., a U.S county contains only one census tract), then the \emph{A} value returned is NA. If the larger geographical unit is census-designated places \code{geo_large = 'place'}, core-based statistical areas \code{geo_large = 'cbsa'}, combined statistical areas \code{geo_large = 'csa'}, or metropolitan divisions \code{geo_large = 'metro'}, only the smaller geographical units completely within a larger geographical unit are considered in the \emph{A} computation (see internal \code{\link[sf]{st_within}} function for more information) and recommend specifying all states within which the interested larger geographical unit are located using the internal \code{state} argument to ensure all appropriate smaller geographical units are included in the \emph{A} computation.
 }
 \examples{
 \dontrun{
 # Wrapped in \dontrun{} because these examples require a Census API key.
-  
-  # Atkinson Index of non-Hispanic Black populations
-  ## of census tracts within Georgia, U.S.A., counties (2020)
-  atkinson(geo_large = "county", geo_small = "tract", state = "GA",
-           year = 2020, subgroup = "NHoLB")
-  
+
+  # Atkinson Index (a measure of the evenness) 
+  ## of Black populations
+  ## in census tracts within counties of Georgia, U.S.A. (2020)
+  atkinson(
+    geo_large = 'county',
+    geo_small = 'tract',
+    state = 'GA',
+    year = 2020,
+    subgroup = c('NHoLB', 'HoLB')
+  )
+ 
+  # Atkinson Index (a measure of the evenness) 
+  ## of median household income
+  ## in census tracts within counties of Georgia, U.S.A. (2020)
+  atkinson(
+    geo_large = 'county',
+    geo_small = 'tract',
+    state = 'GA',
+    year = 2020,
+    subgroup = 'MedHHInc'
+  )
+
 }
 
 }
+\references{
+Atkinson, AB (1970) On the Measurement of Inequality. \emph{Journal of Economic Theory}, 2(3):244-263. \doi{10.1016/0022-0531(70)90039-6}
+
+James, D, & Taeuber, KE (1985) Measures of Segregation. \emph{Sociological Methodology}, 15:1-32. \doi{10.2307/270845}
+
+Massey, DS, & Denton, NA (1988) The Dimensions of Residential Segregation. \emph{Social Forces}, 67(1):281-315. \doi{10.1093/sf/67.2.281}
+}
 \seealso{
 \code{\link[tidycensus]{get_acs}} for additional arguments for geographic extent selection (i.e., \code{state} and \code{county}).
+
+Other one-group evenness indices: \code{\link{gini}}, \code{\link{james_taeuber}}, \code{\link{sudano}}, \code{\link{theil}}
+
+Between groups dissimilarity indices: \code{\link{duncan}}
 }

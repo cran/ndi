@@ -2,7 +2,7 @@
 % Please edit documentation in R/bell.R
 \name{bell}
 \alias{bell}
-\title{Isolation Index based on Shevky & Williams (1949) and Bell (1954)}
+\title{Interaction Index based on Shevky & Williams (1949) and Bell (1954)}
 \usage{
 bell(
   geo_large = "county",
@@ -16,15 +16,15 @@ bell(
 )
 }
 \arguments{
-\item{geo_large}{Character string specifying the larger geographical unit of the data. The default is counties \code{geo_large = "county"}.}
+\item{geo_large}{Character string specifying the larger geographical unit of the data. The default is counties \code{geo_large = 'county'}.}
 
-\item{geo_small}{Character string specifying the smaller geographical unit of the data. The default is census tracts \code{geo_large = "tract"}.}
+\item{geo_small}{Character string specifying the smaller geographical unit of the data. The default is census tracts \code{geo_small = 'tract'}.}
 
 \item{year}{Numeric. The year to compute the estimate. The default is 2020, and the years 2009 onward are currently available.}
 
-\item{subgroup}{Character string specifying the racial/ethnic subgroup(s). See Details for available choices.}
+\item{subgroup}{Character string specifying the racial or ethnic subgroup(s). See Details for available choices.}
 
-\item{subgroup_ixn}{Character string specifying the racial/ethnic subgroup(s) as the interaction population. If the same as \code{subgroup}, will compute the simple isolation of the group. See Details for available choices.}
+\item{subgroup_ixn}{Character string specifying the racial or ethnic subgroup(s) as the interaction population. If the same as \code{subgroup}, will compute the simple isolation of the group. See Details for available choices.}
 
 \item{omit_NAs}{Logical. If FALSE, will compute index for a larger geographical unit only if all of its smaller geographical units have values. The default is TRUE.}
 
@@ -36,59 +36,77 @@ bell(
 An object of class 'list'. This is a named list with the following components:
 
 \describe{
-\item{\code{ii}}{An object of class 'tbl' for the GEOID, name, and II at specified larger census geographies.}
-\item{\code{ii_data}}{An object of class 'tbl' for the raw census values at specified smaller census geographies.}
-\item{\code{missing}}{An object of class 'tbl' of the count and proportion of missingness for each census variable used to compute II.}
+\item{\code{xpy_star}}{An object of class 'tbl' for the GEOID, name, and \emph{xPy\*} at specified larger census geographies.}
+\item{\code{xpy_star_data}}{An object of class 'tbl' for the raw census values at specified smaller census geographies.}
+\item{\code{missing}}{An object of class 'tbl' of the count and proportion of missingness for each census variable used to compute \emph{xPy\*}.}
 }
 }
 \description{
-Compute the aspatial Isolation Index (Bell) of a selected racial/ethnic subgroup(s) and U.S. geographies.
+Compute the aspatial Interaction Index (Bell) of a selected racial or ethnic subgroup(s) and U.S. geographies.
 }
 \details{
-This function will compute the aspatial Isolation Index (II) of selected racial/ethnic subgroups and U.S. geographies for a specified geographical extent (e.g., the entire U.S. or a single state) based on Shevky & Williams (1949; ISBN-13:978-0-837-15637-8) and Bell (1954) \doi{10.2307/2574118}. This function provides the computation of II for any of the U.S. Census Bureau race/ethnicity subgroups (including Hispanic and non-Hispanic individuals).
+This function will compute the aspatial Interaction Index (\emph{xPy\*}) of selected racial or ethnic subgroups and U.S. geographies for a specified geographical extent (e.g., the entire U.S. or a single state) based on Shevky & Williams (1949; ISBN-13:978-0-837-15637-8) and Bell (1954) \doi{10.2307/2574118}. This function provides the computation of \emph{xPy\*} for any of the U.S. Census Bureau race or ethnicity subgroups (including Hispanic and non-Hispanic individuals).
 
-The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey characteristics used for the aspatial computation. The yearly estimates are available for 2009 onward when ACS-5 data are available but are available from other U.S. Census Bureau surveys. The twenty racial/ethnic subgroups (U.S. Census Bureau definitions) are:
+The function uses the \code{\link[tidycensus]{get_acs}} function to obtain U.S. Census Bureau 5-year American Community Survey characteristics used for the aspatial computation. The yearly estimates are available for 2009 onward when ACS-5 data are available (2010 onward for \code{geo_large = 'cbsa'} and 2011 onward for \code{geo_large = 'place'}, \code{geo_large = 'csa'}, or \code{geo_large = 'metro'}) but may be available from other U.S. Census Bureau surveys. The twenty racial or ethnic subgroups (U.S. Census Bureau definitions) are:
 \itemize{
-\item \strong{B03002_002}: not Hispanic or Latino \code{"NHoL"}
-\item \strong{B03002_003}: not Hispanic or Latino, white alone \code{"NHoLW"}
-\item \strong{B03002_004}: not Hispanic or Latino, Black or African American alone \code{"NHoLB"}
-\item \strong{B03002_005}: not Hispanic or Latino, American Indian and Alaska Native alone \code{"NHoLAIAN"}
-\item \strong{B03002_006}: not Hispanic or Latino, Asian alone \code{"NHoLA"}
-\item \strong{B03002_007}: not Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{"NHoLNHOPI"}
-\item \strong{B03002_008}: not Hispanic or Latino, Some other race alone \code{"NHoLSOR"}
-\item \strong{B03002_009}: not Hispanic or Latino, Two or more races \code{"NHoLTOMR"}
-\item \strong{B03002_010}: not Hispanic or Latino, Two races including Some other race \code{"NHoLTRiSOR"}
-\item \strong{B03002_011}: not Hispanic or Latino, Two races excluding Some other race, and three or more races \code{"NHoLTReSOR"}
-\item \strong{B03002_012}: Hispanic or Latino \code{"HoL"}
-\item \strong{B03002_013}: Hispanic or Latino, white alone \code{"HoLW"}
-\item \strong{B03002_014}: Hispanic or Latino, Black or African American alone \code{"HoLB"}
-\item \strong{B03002_015}: Hispanic or Latino, American Indian and Alaska Native alone \code{"HoLAIAN"}
-\item \strong{B03002_016}: Hispanic or Latino, Asian alone \code{"HoLA"}
-\item \strong{B03002_017}: Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{"HoLNHOPI"}
-\item \strong{B03002_018}: Hispanic or Latino, Some other race alone \code{"HoLSOR"}
-\item \strong{B03002_019}: Hispanic or Latino, Two or more races \code{"HoLTOMR"}
-\item \strong{B03002_020}: Hispanic or Latino, Two races including Some other race \code{"HoLTRiSOR"}
-\item \strong{B03002_021}: Hispanic or Latino, Two races excluding Some other race, and three or more races \code{"HoLTReSOR"}
+\item \strong{B03002_002}: not Hispanic or Latino \code{'NHoL'}
+\item \strong{B03002_003}: not Hispanic or Latino, white alone \code{'NHoLW'}
+\item \strong{B03002_004}: not Hispanic or Latino, Black or African American alone \code{'NHoLB'}
+\item \strong{B03002_005}: not Hispanic or Latino, American Indian and Alaska Native alone \code{'NHoLAIAN'}
+\item \strong{B03002_006}: not Hispanic or Latino, Asian alone \code{'NHoLA'}
+\item \strong{B03002_007}: not Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{'NHoLNHOPI'}
+\item \strong{B03002_008}: not Hispanic or Latino, Some other race alone \code{'NHoLSOR'}
+\item \strong{B03002_009}: not Hispanic or Latino, Two or more races \code{'NHoLTOMR'}
+\item \strong{B03002_010}: not Hispanic or Latino, Two races including Some other race \code{'NHoLTRiSOR'}
+\item \strong{B03002_011}: not Hispanic or Latino, Two races excluding Some other race, and three or more races \code{'NHoLTReSOR'}
+\item \strong{B03002_012}: Hispanic or Latino \code{'HoL'}
+\item \strong{B03002_013}: Hispanic or Latino, white alone \code{'HoLW'}
+\item \strong{B03002_014}: Hispanic or Latino, Black or African American alone \code{'HoLB'}
+\item \strong{B03002_015}: Hispanic or Latino, American Indian and Alaska Native alone \code{'HoLAIAN'}
+\item \strong{B03002_016}: Hispanic or Latino, Asian alone \code{'HoLA'}
+\item \strong{B03002_017}: Hispanic or Latino, Native Hawaiian and Other Pacific Islander alone \code{'HoLNHOPI'}
+\item \strong{B03002_018}: Hispanic or Latino, Some other race alone \code{'HoLSOR'}
+\item \strong{B03002_019}: Hispanic or Latino, Two or more races \code{'HoLTOMR'}
+\item \strong{B03002_020}: Hispanic or Latino, Two races including Some other race \code{'HoLTRiSOR'}
+\item \strong{B03002_021}: Hispanic or Latino, Two races excluding Some other race, and three or more races \code{'HoLTReSOR'}
 }
 
 Use the internal \code{state} and \code{county} arguments within the \code{\link[tidycensus]{get_acs}} function to specify geographic extent of the data output.
 
-II is some measure of the probability that a member of one subgroup(s) will meet or interact with a member of another subgroup(s) with higher values signifying higher probability of interaction (less isolation). II can range in value from 0 to 1.
+\emph{xPy\*} is some measure of the probability that a member of one subgroup(s) will meet or interact with a member of another subgroup(s) with higher values signifying higher probability of interaction (less isolation). \emph{xPy\*} can range in value from 0 to 1.
 
-Larger geographies available include state \code{geo_large = "state"}, county \code{geo_large = "county"}, and census tract \code{geo_large = "tract"} levels. Smaller geographies available include, county \code{geo_small = "county"}, census tract \code{geo_small = "tract"}, and census block group \code{geo_small = "block group"} levels. If a larger geographical area is comprised of only one smaller geographical area (e.g., a U.S county contains only one census tract), then the II value returned is NA.
+Larger geographical units available include states \code{geo_large = 'state'}, counties \code{geo_large = 'county'}, census tracts \code{geo_large = 'tract'}, census-designated places \code{geo_large = 'place'}, core-based statistical areas \code{geo_large = 'cbsa'}, combined statistical areas \code{geo_large = 'csa'}, and metropolitan divisions \code{geo_large = 'metro'}. Smaller geographical units available include, counties \code{geo_small = 'county'}, census tracts \code{geo_small = 'tract'}, and census block groups \code{geo_small = 'cbg'}. If a larger geographical unit is comprised of only one smaller geographical unit (e.g., a U.S county contains only one census tract), then the \emph{xPy\*} value returned is NA. If the larger geographical unit is census-designated places \code{geo_large = 'place'}, core-based statistical areas \code{geo_large = 'cbsa'}, combined statistical areas \code{geo_large = 'csa'}, or metropolitan divisions \code{geo_large = 'metro'}, only the smaller geographical units completely within a larger geographical unit are considered in the \emph{xPy\*} computation (see internal \code{\link[sf]{st_within}} function for more information) and recommend specifying all states within which the interested larger geographical unit are located using the internal \code{state} argument to ensure all appropriate smaller geographical units are included in the \emph{xPy\*} computation.
 }
 \examples{
 \dontrun{
 # Wrapped in \dontrun{} because these examples require a Census API key.
-  
-  # Isolation of non-Hispanic Black vs. non-Hispanic white populations
-  ## of census tracts within Georgia, U.S.A., counties (2020)
-  bell(geo_large = "county", geo_small = "tract", state = "GA",
-       year = 2020, subgroup = "NHoLB", subgroup_ixn = "NHoLW")
-  
+
+  # Interaction Index (a measure of exposure)
+  ## of non-Hispanic Black vs. non-Hispanic white populations
+  ## in census tracts within counties of Georgia, U.S.A. (2020)
+  bell(
+    geo_large = 'county',
+    geo_small = 'tract',
+    state = 'GA',
+    year = 2020,
+    subgroup = 'NHoLB',
+    subgroup_ixn = 'NHoLW'
+   )
+
 }
 
 }
+\references{
+Eshref, S, & Williams, M (1949). \emph{The Social Areas of Los Angeles: Analysis and Typology}. 1st Ed. Los Angeles:John Randolph Haynes and Dora Haynes Foundation. ISBN-13:978-0-837-15637-8
+
+Bell, W (1954) A probability model for the measurement of ecological segregation. \emph{Social Forces}, 32(4):357-364. \doi{10.2307/2574118}
+
+Massey, DS, & Denton, NA (1988) The Dimensions of Residential Segregation. \emph{Social Forces}, 67(1):281-315. \doi{10.1093/sf/67.2.281}
+}
 \seealso{
 \code{\link[tidycensus]{get_acs}} for additional arguments for geographic extent selection (i.e., \code{state} and \code{county}).
+
+Other interaction indices: \code{\link{morgan_denton}}
+
+Isolation indices: \code{\link{anthopolos}}, \code{\link{bemanian_beyer}}, \code{\link{lieberson}}, \code{\link{morgan_massey}}, \code{\link{white}}
 }
